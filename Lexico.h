@@ -1067,19 +1067,3 @@ Token proximo_token()
 	token.atributo = -1;
 	return(token);
 }
-
-int main ()
-{
-	Token token;
-    code = readFile("programa.txt");
-	while (code[cont_sim_lido] != '\000')
-		token = proximo_token();
-
-	for (int i = 1; i < proximo_id; i++) {
-    std::cout << "ID: " << i << ", Identificador: " << tabela_simbolos[i].identificador << std::endl;
-	}
-
-	free(code);
-	return 0;
-
-}

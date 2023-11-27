@@ -1,11 +1,12 @@
 #include <stdio.h>
+#include <cstring>
 #include "lexico.h"
 
 // Estrutura de Token
 Token token;
 char *code;
 
-bool eOperador(char c){ // funçao para identificar caracteres depois de um numero que nao seja ' ' e \n
+bool ebinOp(char c){ // funçao para identificar caracteres depois de um numero que nao seja ' ' e \n
     char operadores[9][6] = {"or", "and", "RELOP", "..", "+", "-", "*", "/", "^"};
     for(int i=0; i<9; i++){
         if(c == operadores[i][0]){
@@ -46,11 +47,10 @@ void parseBlock() {
 
 void parseStmt() {
 	// Stmt -> Vars = Exps
-    if (token.nome_token == 'ID') {
+    if (token.nome_token == 260) {
 		parseVars();
 		if (token.nome_token == '=') {
 			printf("=\n");
-			token = proximo_token();
 			parseExps();
 			codigo_fim();
 		}
@@ -67,7 +67,6 @@ void parseStmt() {
 		parseBlock();
 		if (token.nome_token == 'end'){
 			printf("end\n");
-			token = proximo_token();
 			codigo_fim();
 		}
 	} 
@@ -80,7 +79,6 @@ void parseStmt() {
 			parseBlock();
 			if (token.nome_token == 'end'){
 				printf("end\n");
-				token = proximo_token();
 				codigo_fim();
 			}
 			// else (fazer ter erro)
@@ -98,7 +96,6 @@ void parseStmt() {
 			parseOptElse();
 			if (token.nome_token == 'end'){
 				printf("end\n");
-				token = proximo_token();
 				codigo_fim();
 			}
 			// else (fazer ter erro)
@@ -114,7 +111,6 @@ void parseStmt() {
     else if (token.nome_token == 'break') {
 		// Stmt -> break
 		printf("break\n");
-		token = proximo_token();
 		codigo_fim();
 	} 
     else if (token.nome_token == 'for') { 
@@ -139,7 +135,7 @@ void parseStmt() {
 void parseForStmt() {
 	//for Name = Exp, Exp OptExpList do Block end
 	token = proximo_token();
-	if (token.nome_token == 'ID') {
+	if (token.nome_token == 260) {
 		printf("id\n");
 		token = proximo_token();
 		if (token.nome_token == '=') {
@@ -156,7 +152,6 @@ void parseForStmt() {
 					parseBlock();
 					if (token.nome_token == 'end'){
 						printf("end\n");
-						token = proximo_token();
 						codigo_fim();
 					}
 				}
@@ -172,7 +167,6 @@ void parseForStmt() {
 				parseBlock();
 				if (token.nome_token == 'end'){
 					printf("end\n");
-					token = proximo_token();
 					codigo_fim();
 				}
 			}
@@ -188,13 +182,13 @@ void parseLocalStmt() {
 		printf("function\n");
 		parseFunction();
 		token = proximo_token();
-		if (token.nome_token == 'ID'){
+		if (token.nome_token == 260){
 			printf("id\n");
 			parseFunctionBody();
 		}
 	}
 	// Names = Exps
-	else if (token.nome_token == 'ID') {
+	else if (token.nome_token == 260) {
 		parseNames();
 		token = proximo_token();
 		if (token.nome_token == '=') {
@@ -214,7 +208,6 @@ void parseElseIfList(){
 		printf("then\n");
 		parseBlock();
 		parseElseIfList();
-		token = proximo_token();
 		codigo_fim();
 	}
 	else {
@@ -241,7 +234,7 @@ void parseOptElse(){
 void parseOptExpList(){
 	// , Exp OptExpList | ε
 	token = proximo_token();
-	if (token.nome_token = ','){
+	if (token.nome_token == ','){
 		printf(",\n");
 		parseExp();
 		parseOptExpList();
@@ -258,14 +251,13 @@ void parseExps(){
 	// Exp Exps'
 	parseExp();
 	parseExpsPrime();
-	token = proximo_token();
 	codigo_fim();
 }
 
 void parseExpsPrime(){
 	//, Exp Exps' | ε
 	token = proximo_token();
-	if (token.nome_token = ','){
+	if (token.nome_token == ','){
 		printf(",\n");
 		parseExp();
 		parseExpsPrime();
@@ -280,7 +272,6 @@ void parseExp(){
     //PrefixExp Exp'
     parsePrefixExp();
     parseExpPrime();
-    token = proximo_token();
     codigo_fim();
 }
 
@@ -288,11 +279,10 @@ void parseExp(){
 void parseExpPrime() {
     //BinOp Exp Exp' | ε
     token = proximo_token();
-    if (eOperador(token.nome_token)){
+    if (ebinOp(token.nome_token)){
         parseBinOp();
         parseExp();
         parseExpPrime();
-        token = proximo_token();
         codigo_fim();
     }
     else {
@@ -303,22 +293,13 @@ void parseExpPrime() {
 void parsePrefixExp(){ //Falta Completar
 	//Var | Function | not Exp | { Field' } | nil | true | false | Number | String | ( Exp )
 	token = proximo_token();
-	if (token.nome_token == 'ID'){ //não sei como verificar Var (talvez cerebro derreteu)
-		token = proximo_token();
-		parseVars();
-		token = proximo_token();
-		codigo_fim();
-
-	}
-	else if (token.nome_token == 'ID'){ // não sei como verificar Function (talvez cerebro derreteu)
-		parseFunction();
-		token = proximo_token();
+	if (token.nome_token == 260 || token.nome_token == '['){ //não sei como verificar Var 
+		parseVars(); //(talvez cerebro derreteu)                   pra ser diferente de Function 
 		codigo_fim();
 	}
 	else if (token.nome_token == 'not'){
 		printf("not\n");
 		parseExp();
-		token = proximo_token();
 		codigo_fim();
 	}
 	else if (token.nome_token == '{'){
@@ -327,34 +308,28 @@ void parsePrefixExp(){ //Falta Completar
 		token = proximo_token();
 		if (token.nome_token == '}'){
 			printf("}\n");
-			token = proximo_token();
 			codigo_fim();
 		}
 	}
 	else if (token.nome_token == 'nil'){
-		printf("nil\n");
-		token = proximo_token();
+		printf("nil\n");;
 		codigo_fim();
 	}
 		else if (token.nome_token == 'true'){
 		printf("true\n");
-		token = proximo_token();
 		codigo_fim();
 	}
 	else if (token.nome_token == 'false'){
 		printf("false\n");
-		token = proximo_token();
 		codigo_fim();
 	}
-	else if (token.nome_token == 'NUM'){
+	else if (token.nome_token == 261){
 		printf("Number\n");
-		token = proximo_token();
 		codigo_fim();
 	}
-	else if (token.nome_token == 'seila'){ // Como vou fazer para verificar se é string ???? 
-		printf("String\n");            //pq tem o conteudo dela né, que é qualquer coisa.. penso dps, cerebro derreteu
-		token = proximo_token();
-		codigo_fim();
+	else if (token.nome_token == 268){ // 
+		printf("string\n");            			
+		codigo_fim();  							
 	}
 	else if (token.nome_token == '('){
 		printf("(\n");
@@ -362,7 +337,6 @@ void parsePrefixExp(){ //Falta Completar
 		token = proximo_token();
 		if (token.nome_token == ')'){
 			printf(")\n");
-			token = proximo_token();
 			codigo_fim();
 		}
 	}
@@ -374,9 +348,8 @@ void parsePrefixExp(){ //Falta Completar
 void parseVar(){
     //Name | PrefixExp [ Exp ]
 	token = proximo_token();
-    if (token.nome_token == 'ID'){
+    if (token.nome_token == 260){
         printf("id\n");
-        token = proximo_token();
         codigo_fim();
     }
 	else{
@@ -388,7 +361,6 @@ void parseVar(){
 			token = proximo_token();
 			if (token.nome_token == ']'){
 				printf("]\n");
-				token = proximo_token();
 				codigo_fim();
 			}
 		}
@@ -397,18 +369,68 @@ void parseVar(){
 
 
 void parseField(){ // Falta completar
-	
+	// [ Exp ] = Exp | Name = Exp
+	token = proximo_token();
+	if (token.nome_token == '['){
+		printf("[\n");
+		parseExp();
+		token = proximo_token();
+		if (token.nome_token == ']'){
+			printf("]\n");
+			token = proximo_token();
+			if (token.nome_token == '='){
+				printf("=\n");
+				parseExp();
+				codigo_fim();
+			}
+		}
+	}
+	else if (token.nome_token == 260){
+		printf("id\n");
+		token = proximo_token();
+		if (token.nome_token == '='){
+			printf("=\n");
+			parseExp();
+			codigo_fim();
+		}
+	}
 }
 
 void parseFieldPrime(){ //Falta completar
+	//Field Field’’ Field'| ε
+	token = proximo_token();
+	if (token.nome_token == '['){
+		parseField();
+		parseFieldPrimePrime();
+		parseFieldPrime();
+		codigo_fim();
+	}
+	else {
+		// epsilon
+	}
+
+
+}
+
+void parseFieldPrimePrime(){
+	//, Field Field’’ | ε
+	token = proximo_token();
+	if (token.nome_token == ','){
+		printf(",\n");
+		parseField();
+		parseFieldPrimePrime();
+		codigo_fim();
+	}
+	else {
+		//epsilon
+	}
 
 }
 
 void parseBinOp(){
 	//or | and | < | > | <= | >= | ^= | == | .. | + | - | * | / | ^
 	token = proximo_token();
-	if (eOperador(token.nome_token)){
-		token = proximo_token();
+	if(ebinOp(token.nome_token)){
 		codigo_fim();
 	}
 }
@@ -423,7 +445,7 @@ void parseVars(){
 void parseVarsPrime(){
 	//, Var Vars’ |  ε
 	token = proximo_token();
-	if (token.nome_token = ','){
+	if (token.nome_token == ','){
 		printf(",\n");
 		parseVar();
 		parseVarsPrime();
@@ -437,7 +459,7 @@ void parseVarsPrime(){
 void parseFunction(){
 	//FunctionBody Function'
 	token = proximo_token();
-	if (token.nome_token == 'ID') {
+	if (token.nome_token == 260) {
 		printf("ID\n");
 		token = proximo_token();
 		// FunctionBody -> Name (Params)^opt Block end
@@ -449,7 +471,7 @@ void parseFunction(){
 
 void parseFunctionPrime(){
 	token = proximo_token();
-	if (token.nome_token == 'ID') {
+	if (token.nome_token == 260) {
 		printf("ID\n");
 		token = proximo_token();
 		// FunctionBody -> Name (Params)^opt Block end
@@ -474,7 +496,6 @@ void parseFunctionBody(){
 		token = proximo_token();
 		if (token.nome_token == 'end'){
 			printf("end\n");
-			token = proximo_token();
 			codigo_fim();
 		}
 	}
@@ -483,7 +504,6 @@ void parseFunctionBody(){
 		token = proximo_token();
 		if (token.nome_token == 'end'){
 			printf("end\n");
-			token = proximo_token();
 			codigo_fim();
 		}
 	}
@@ -497,7 +517,6 @@ void parseParams(){
 	if (token.nome_token== 'ID') {
 		printf("id\n");
 		parseNames();
-		token = proximo_token();
 		codigo_fim();
 	}
 	// else (tratar erro)
@@ -513,12 +532,13 @@ void parseNames(){
 void parseNamesPrime(){
 	//, Name Names’ |  ε
 	token = proximo_token();
-	if (token.nome_token = ','){
+	if (token.nome_token == ','){
 		printf(",\n");
 		token = proximo_token();
-		if (token.nome_token = 'ID'){
+		if (token.nome_token == 260){
 			printf("id\n");
 			parseNamesPrime();
+			codigo_fim();
 		}
 	}
 	else{
@@ -532,31 +552,26 @@ void panicMode(){
 }
 
 void codigo_fim() {
+	token = proximo_token();
 	if (token.atributo == -1){ 
 		printf("Fim do Arquivo\n");
 		exit(1); 
 	}
 }
 
-int main(int argc, char *argv[]) {
-    if (argc != 2) {
-		printf("Como chamar o compilador: %s <nome do arquivo>\n", argv[0]);
-		return 1;
-	}
+int main(){
+	Token token;
+    code = readFile("programa.txt");
 
-	char *filename = argv[1];
-	code = readFile(filename);
-	
-	
 	if (code == NULL) {
 		printf("Arquivo não encontrado\n");
-	} else {
-		token = proximo_token();
-		codigo_fim();	
+	} 
+	else {
+		codigo_fim();
 		parse();
 	}
 	printf("Análise sintática realizada com sucesso\n");
-			
+	
 	free(code);
 	return 0;
 }
